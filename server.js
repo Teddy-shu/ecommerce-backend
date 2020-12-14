@@ -11,7 +11,7 @@ const assert = require('assert');
 
 app.use(cors());
 app.use(express.json());
-app.use(express.urlencoded({ extended: false }));;
+app.use(express.urlencoded({ extended: false }));
 app.use('/',router);
 
 router.get('/m/newArrive', async (req, res) => {
@@ -21,7 +21,7 @@ router.get('/m/newArrive', async (req, res) => {
 
     if(collection) {
       const responseData = await collection.find().sort( { '_id': -1 } ).limit(8).map( function(u) { return {'id':u._id,'name': u.name, 'price': u.price}; } ).toArray();
-      console.log(responseData);
+      //console.log(responseData);
       if(responseData)
         res.send(JSON.stringify(responseData));
       else
@@ -29,25 +29,53 @@ router.get('/m/newArrive', async (req, res) => {
     } else {
       res.sendStatus(404);
     }
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 
+router.get('/m/product', async (req, res) => {
+  var id =  req.query.id;
+  try {
+    const client = await MongoClient.connect(process.env.URI);
+    const collection = client.db(process.env.DBNAME).collection(process.env.COLLECTION);
 
-    /*
-    const loadDB = await MongoClient.connect(process.env.URI, function(err, client) {
-      assert.equal(null, err);
-      console.log("Connected successfully to server");
+    if(collection) {
+      const responseData = await collection.find({ '_id': new ObjectId(id) }).toArray();
+      if(responseData)
+        res.send(JSON.stringify(responseData));
+      else
+        res.sendStatus(404);
+    } else {
+      res.sendStatus(404);
+    }
+  } catch (error) {
+    console.log(error.message);
+  }
+});
 
-      const db = client.db(process.env.DBNAME);
-      const collection = db.collection(process.env.COLLECTION);
+router.get('/m/productsFromType', async (req, res) => {
+  var type =  req.query.type;
+  var quantity = req.query.quantity ? req.query.quantity : 0;
+  try {
+    const client = await MongoClient.connect(process.env.URI);
+    const collection = client.db(process.env.DBNAME).collection(process.env.COLLECTION);
 
-      collection.find().sort( { '_id': -1 } ).limit(8).map( function(u) { return {'id':u._id,'name': u.name, 'price': u.price}; } ).toArray(function(err, docs) {
-        assert.equal(err, null);
-        responseData = docs;
-      });
+    if(collection) {
+      var responseData;
+      if(quantity > 0) {
+        responseData = await collection.find({ 'type': type }).sort( { '_id': -1 } ).limit(8).map( function(u) { return {'id':u._id,'name': u.name, 'price': u.price}; } ).toArray();
+      } else {
+        responseData = await collection.find({ 'type': type }).toArray();
+      }
 
-      client.close();
-      return 200;
-    })
-    */
+      if(responseData)
+        res.send(JSON.stringify(responseData));
+      else
+        res.sendStatus(404);
+    } else {
+      res.sendStatus(404);
+    }
   } catch (error) {
     console.log(error.message);
   }
