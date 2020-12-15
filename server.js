@@ -66,7 +66,7 @@ router.get('/m/productsFromType', async (req, res) => {
       if(quantity > 0) {
         responseData = await collection.find({ 'type': type }).sort( { '_id': -1 } ).limit(8).map( function(u) { return {'id':u._id,'name': u.name, 'price': u.price}; } ).toArray();
       } else {
-        responseData = await collection.find({ 'type': type }).toArray();
+        responseData = await collection.find({ 'type': type }).sort( { '_id': -1 } ).map( function(u) { return {'id':u._id,'name': u.name, 'price': u.price}; } ).toArray();
       }
 
       if(responseData)
@@ -80,6 +80,7 @@ router.get('/m/productsFromType', async (req, res) => {
     console.log(error.message);
   }
 });
+
 
 const port = process.env.PORT || port;
 app.listen(port, () => console.log(`express listen at port ${port}`));
